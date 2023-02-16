@@ -1,0 +1,193 @@
+# Ansible playbook that manages Digital Ocean Kubernetes for a dev environment with 2 nodes, 1 load balancer, 1 web server, 1 MySQL server, and Jenkins
+---
+- name: Setup Digital Ocean Kubernetes for Dev environment
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  # Define variables
+  vars:
+    #Digital Ocean API Token
+    do_token: dop_v1_26a807e35c738285c8b4d2d14a5c8503cb04b50a8ef175f14e82313e35b7ef98
+
+    #Kubernetes cluster variables
+    cluster_name: dev-cluster
+    cluster_size: s-1vcpu-2gb
+    cluster_region: sgp1
+    node_count: 2
+
+    #Load balancer variables
+    lb_name: jenkins-lb
+    lb_port: 8080
+    lb_web_name: web-lb
+    lb_web_port: 80
+
+    #Jenkins variables
+    jenkins_name: jenkins
+    jenkins_namespace: jenkins
+    jenkins_replicas: 2
+
+    #Web server variables
+    web_name: web
+    web_namespace: web
+    web_image: blackmouse/mini_web
+    web_port: 4000
+
+    #MySQL variables
+    mysql_name: mysql
+    mysql_namespace: mysql
+    mysql_image: mysql:latest
+    mysql_port: 3306
+    mysql_password: root
+
+  tasks:
+    #Authenticate with Digital Ocean
+    - name: Authenticate with DigitalOcean Api
+      digital_ocean:
+        state: present
+        command: auth
+        oauth_token: "{{ do_token }}"
+
+    #Create Kubernetes cluster
+    - name: Create Kubernetes cluster
+      digital_ocean_kubernetes:
+        state: present
+        name: "{{ cluster_name }}"
+        region: "{{ cluster_region }}"
+        node_pools:
+          - name: worker-pool
+            size: "{{ cluster_size }}"
+            count: "{{ node_count }}"
+            tags:
+              - worker
+              - k8s
+              - dev
+        tags:
+          - k8s
+          - dev
+
+    #Create namesapce for Jenkins
+    - name: Create namespace for Jenkins
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ jenkins_namespace }}"
+
+    # Deploy Jenkins with 2 replicas
+    - name: Deploy Jenkins
+      k8s:
+        state: present
+        src: jenkins.yml
+        namespace: "{{ jenkins_namespace }}"
+      vars:
+        jenkins_name: "{{ jenkins_name }}"
+        jenkins_replicas: "{{ jenkins_replicas }}"
+        jenkins_namespace: "{{ jenkins_namespace }}"
+
+    # Create namesapce for Web server
+    - name: Create namespace for Web server
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ web_namespace }}"
+
+    # Deploy Web server
+    - name: Deploy Web server
+      k8s:
+        state: present
+        src: web.yml
+        namespace: "{{ web_namespace }}"
+      vars:
+        web_name: "{{ web_name }}"
+        web_namespace: "{{ web_namespace }}"
+        web_image: "{{ web_image }}"
+        web_port: "{{ web_port }}"
+
+    # Create namesapce for MySQL
+    - name: Create namespace for MySQL
+      k8s:
+        state: present
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ mysql_namespace }}"
+
+    # Deploy MySQL
+    - name: Deploy MySQL
+      k8s:
+        state: present
+        src: mysql.yml
+        namespace: "{{ mysql_namespace }}"
+      vars:
+        mysql_name: "{{ mysql_name }}"
+        mysql_namespace: "{{ mysql_namespace }}"
+        mysql_image: "{{ mysql_image }}"
+        mysql_port: "{{ mysql_port }}"
+        mysql_password: "{{ mysql_password }}"
+
+    # Create Load Balancer for Jenkins
+    - name: Create Load Balancer for Jenkins
+      digital_ocean_loadbalancer:
+        state: present
+        name: "{{ lb_name }}"
+        droplet_ids:
+          - "{{ item.id }}"
+        forwarding_rules:
+          - entry_protocol: http
+            entry_port: "{{ lb_port }}"
+            target_protocol: http
+            target_port: "{{ lb_port }}"
+            certificate_id: ""
+            tls_passthrough: false
+        healthcheck:
+          protocol: http
+          port: "{{ lb_port }}"
+          path: "/"
+        region: "{{ cluster_region }}"
+        tag: k8s
+      with_items: "{{ lookup('k8s', api_version='v1', kind='Node', label_selectors='kubernetes.io/role=worker') }}"
+      register: lb
+
+    # Create Load Balancer for Web server
+    - name: Create Load Balancer for Web server
+      digital_ocean_loadbalancer:
+        state: present
+        name: "{{ lb_web_name }}"
+        droplet_ids:
+          - "{{ item.id }}"
+        forwarding_rules:
+          - entry_protocol: http
+            entry_port: "{{ lb_web_port }}"
+            target_protocol: http
+            target_port: "{{ lb_web_port }}"
+            certificate_id: ""
+            tls_passthrough: false
+        healthcheck:
+          protocol: http
+          port: "{{ lb_web_port }}"
+          path: "/"
+        region: "{{ cluster_region }}"
+        tag: k8s
+      with_items: "{{ lookup('k8s', api_version='v1', kind='Node', label_selectors='kubernetes.io/role=worker') }}"
+      register: lb_web
+
+    # Output all the information (Jenkins URL, Web URL, MySQL URL, MySQL password)
+    - name: Output Jenkins URL
+      debug:
+        msg: "Jenkins URL: http://{{ lb.loadbalancer.ip }}:{{ lb_port }}"
+    - name: Output Web URL
+      debug:
+        msg: "Web URL: http://{{ lb_web.loadbalancer.ip }}:{{ lb_web_port }}"
+    - name: Output MySQL URL
+      debug:
+        msg: "MySQL URL: {{ mysql_name }}.{{ mysql_namespace }}.svc.cluster.local:{{ mysql_port }}"
+    - name: Output MySQL password
+      debug:
+        msg: "MySQL password: {{ mysql_password }}"
