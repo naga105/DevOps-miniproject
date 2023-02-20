@@ -1,0 +1,155 @@
+---
+- name: Create Kubernetes deployment and service for web-server , Jenkins  namespace
+  hosts: root
+  connection: local
+  become: true
+  gather_facts: false
+  vars:
+    namespace: web-server
+    deployment_name: miniproject
+    image: khanhtoan007/miniproject:v1
+    jenkins_namespace: jenkins
+    jenkins_deployment_name: jenkins
+    do_token: dop_v1_84583e065650f3bb87c1d2ef8948ee108ca1e196d2bf46109cbfef948c1c047c
+  tasks:
+    - name: Install required python libraries
+      pip:
+        name: kubernetes
+    #Authenticate with Digital Ocean  
+    - name: ensure ssh key exists
+      user: 
+        name: "ubunutu"
+        generate_ssh_key: yes
+        ssh_key_file: ~/.ssh/id_rsa
+
+
+    # - name: ensure key exists at DigitalOcean
+    #   digital_ocean: 
+    #    state: present
+    #    command: ssh
+    #    name: my_ssh_key
+    #    ssh_pub_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    #    api_token: "{{ do_token }}"
+    #   register: my_ssh_key
+      
+    # - name: "add public ssh key to digitalocean account"
+    #   digital_ocean_sshkey:
+    #     name: "ubunutu"
+    #     api_token: "{{ do_token }}"
+    #     ssh_pub_key: "{{lookup('file', '~/.ssh/id_rsa.pub') }}"
+    #     state: present
+    #   register: sshkey_result
+
+    - name: Authenticate with DigitalOcean Api
+      digital_ocean:
+        state: present
+        command: ssh
+        name: "huy"
+        api_token: "{{ do_token }}"
+
+   
+    # Connect to cluster using DNS
+    # - name: Load DigitalOcean Kubernetes config
+    #   kubernetes.core.k8s:
+    #    connections:
+    #    - host:  https://815e7f3f-aa2e-4f6e-820e-1c31f8cd3ebd.k8s.ondigitalocean.com
+    #      api_key:  "{{ do_token }}"
+    #      validate_certs: false
+    # Connect to cluster using local kubeconfig file
+    
+    - name: Ensure the jenkins Namespace exists.
+      k8s:
+        kubeconfig: '/home/ubuntu/.kube/config'
+        state: present
+        api_version: v1
+        kind: Namespace
+        name: jenkins
+      
+
+    - name: Create web-server deployment
+      k8s:
+        api_token: "{{ do_token }}"
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ deployment_name }}"
+            namespace: "{{ namespace }}"
+          spec:
+            replicas: 3
+            selector:
+              matchLabels:
+                app: "{{ deployment_name }}"
+            template:
+              metadata:
+                labels:
+                  app: "{{ deployment_name }}"
+              spec:
+                containers:
+                - name: app
+                  image: "{{ image }}"
+                  ports:
+                  - containerPort: 4000
+
+    - name: Create web-server service
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ deployment_name }}-service"
+            namespace: "{{ namespace }}"
+          spec:
+            selector:
+              app: "{{ deployment_name }}"
+            type: LoadBalancer
+            ports:
+              - name: http
+                port: 4000
+                targetPort: 4000
+
+    - name: Create Jenkins deployment
+      k8s:
+        definition:
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: "{{ jenkins_deployment_name }}"
+            namespace: "{{ jenkins_namespace }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: jenkins
+            template:
+              metadata:
+                labels:
+                  app: jenkins
+              spec:
+                containers:
+                - name: jenkins
+                  image: "{{ jenkins_image_name }}"
+                  ports:
+                   - name: http
+                     containerPort: 8080
+                   - name: jnlp
+                     containerPort: 50000
+    - name: Create Jenkins service
+      k8s:
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ jenkins_deployment_name }}-service"
+            namespace: "{{ jenkins_namespace}}"
+          spec:
+            selector:
+              app: jenkins
+            type: LoadBalancer
+            ports:
+              - name: http
+                port: 8080
+                targetPort: 8080
+              - name: jnlp
+                port: 50000
+                targetPort: 50000
