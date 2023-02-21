@@ -1,13 +1,14 @@
 ---
 - name: Create Kubernetes deployment and service for web-server , Jenkins  namespace
-  hosts: root
+  hosts: master
   connection: local
   become: true
   gather_facts: false
   vars:
-    namespace: web-server
+    web_namespace: miniproject
     deployment_name: miniproject
     image: khanhtoan007/miniproject:v1
+    jenkins_image_name: jenkins/jenkins:lts
     jenkins_namespace: jenkins
     jenkins_deployment_name: jenkins
     do_token: dop_v1_84583e065650f3bb87c1d2ef8948ee108ca1e196d2bf46109cbfef948c1c047c
@@ -42,39 +43,77 @@
 
     - name: Authenticate with DigitalOcean Api
       digital_ocean:
-        state: present
-        command: ssh
-        name: "huy"
-        api_token: "{{ do_token }}"
+       state: present
+       command: ssh
+       name: "huy"
+       api_token: "{{ do_token }}"
 
-   
+    - name: Copy file with owner and permissions
+      ansible.builtin.copy:
+        src: ~/.kube/config
+        dest: ~/.kube/config
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Get an existing Service object
+      kubernetes.core.k8s_info:
+       kubeconfig: "~/.kube/config"
+       api_version: v1
+       kind: Service
+       name: web
+       namespace: jenkins
+      register: web_service
     # Connect to cluster using DNS
     # - name: Load DigitalOcean Kubernetes config
-    #   kubernetes.core.k8s:
-    #    connections:
-    #    - host:  https://815e7f3f-aa2e-4f6e-820e-1c31f8cd3ebd.k8s.ondigitalocean.com
-    #      api_key:  "{{ do_token }}"
-    #      validate_certs: false
+    #   k8s:
+    #     connections:
+    #     - host:  https://815e7f3f-aa2e-4f6e-820e-1c31f8cd3ebd.k8s.ondigitalocean.com
+    #       api_key:  "{{ do_token }}"
+    #       validate_certs: false
+
     # Connect to cluster using local kubeconfig file
-    
-    - name: Ensure the jenkins Namespace exists.
-      k8s:
-        kubeconfig: '/home/ubuntu/.kube/config'
-        state: present
-        api_version: v1
-        kind: Namespace
-        name: jenkins
+    - name: Get information about an existing DigitalOcean Kubernetes cluster
+      community.digitalocean.digital_ocean_kubernetes_info:
+        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        name: k8s-dev
+        return_kubeconfig: yes
+      register: my_cluster
+     
+    # - ansible.builtin.debug:
+    #    msg: "Cluster name is {{ my_cluster.data.name }}, ID is {{ my_cluster.data.id }}"
+
+    # - ansible.builtin.debug:
+    #    msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
+
+  
+    - name: Get Cluster information
+      kubernetes.core.k8s_info:
+       api_key: "{{do_token}}"
+       kind: Namespace
+       name: jenkins
+      register: api_status
       
+    # - name: Create web-server namespace
+    #   k8s:
+    #    api_key: "{{ do_token }}"
+    #    definition:
+    #     apiVersion: v1
+    #     kind: Namespace
+    #     metadata:
+    #       name: "{{ deployment_name }}"
+    #       namespace: "{{ web_namespace }}"
+
 
     - name: Create web-server deployment
       k8s:
-        api_token: "{{ do_token }}"
+        api_key: "{{ do_token }}"
         definition:
-          apiVersion: apps/v1
+          apiVersion: v1
           kind: Deployment
           metadata:
             name: "{{ deployment_name }}"
-            namespace: "{{ namespace }}"
+            namespace: "{{ web_namespace }}"
           spec:
             replicas: 3
             selector:
@@ -93,12 +132,13 @@
 
     - name: Create web-server service
       k8s:
+        api_key: "{{ do_token }}"
         definition:
           apiVersion: v1
           kind: Service
           metadata:
             name: "{{ deployment_name }}-service"
-            namespace: "{{ namespace }}"
+            namespace: "{{ web_namespace }}"
           spec:
             selector:
               app: "{{ deployment_name }}"
@@ -110,14 +150,15 @@
 
     - name: Create Jenkins deployment
       k8s:
-        definition:
-          apiVersion: apps/v1
+       api_key: "{{ do_token }}"
+       definition:
+          apiVersion: v1
           kind: Deployment
           metadata:
             name: "{{ jenkins_deployment_name }}"
             namespace: "{{ jenkins_namespace }}"
           spec:
-            replicas: 1
+            replicas: 3
             selector:
               matchLabels:
                 app: jenkins
@@ -136,6 +177,7 @@
                      containerPort: 50000
     - name: Create Jenkins service
       k8s:
+        api_key: "{{ do_token }}"
         definition:
           apiVersion: v1
           kind: Service
