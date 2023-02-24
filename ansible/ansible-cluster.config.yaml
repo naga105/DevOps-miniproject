@@ -16,23 +16,22 @@
     - name: Install required python libraries
       pip:
         name: kubernetes
-    #Authenticate with Digital Ocean  
+    #Authenticate with Digital Ocean
     - name: ensure ssh key exists
-      user: 
+      user:
         name: "ubunutu"
         generate_ssh_key: yes
         ssh_key_file: ~/.ssh/id_rsa
 
-
     # - name: ensure key exists at DigitalOcean
-    #   digital_ocean: 
+    #   digital_ocean:
     #    state: presenta
     #    command: ssh
     #    name: my_ssh_key
     #    ssh_pub_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     #    api_token: "{{ do_token }}"
     #   register: my_ssh_key
-      
+
     # - name: "add public ssh key to digitalocean account"
     #   digital_ocean_sshkey:
     #     name: "ubunutu"
@@ -43,73 +42,48 @@
 
     - name: Authenticate with DigitalOcean Api
       digital_ocean:
-       state: present
-       command: ssh
-       name: "ansible"
-       api_token: "{{ do_token }}"
+        state: present
+        command: ssh
+        name: "ansible"
+        api_token: "{{ do_token }}"
 
-    # - name: Copy file with owner and permissions
-    #   ansible.builtin.copy:
-    #     src: ~/.kube/config
-    #     dest: ~/.kube/config
-    #     owner: root
-    #     group: root
-    #     mode: '0644'
-
-    # - name: Get an existing Service object
-    #   kubernetes.core.k8s_info:
-    #    kubeconfig: "~/.kube/config"
-    #    api_version: v1
-    #    kind: Service
-    #    name: web
-    #    namespace: jenkins
-    #   register: web_service
-    # Connect to cluster using DNS
-    # - name: Load DigitalOcean Kubernetes config
-    #   k8s:
-    #     connections:
-    #     - host:  https://815e7f3f-aa2e-4f6e-820e-1c31f8cd3ebd.k8s.ondigitalocean.com
-    #       api_key:  "{{ do_token }}"
-    #       validate_certs: false
     - name: Gather information about all load balancers
       community.digitalocean.digital_ocean_load_balancer_info:
         oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
       register: my_loadbalancer
-      
+
     - ansible.builtin.debug:
-       msg: "Load balancer : {{ my_loadbalancer.data}}"
+        msg: "Load balancer : {{ my_loadbalancer.data}}"
 
     # Connect to cluster using local kubeconfig file
     - name: Get information about an existing DigitalOcean Kubernetes cluster
       community.digitalocean.digital_ocean_kubernetes_info:
-         oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
-         name: k8s-dev
-         return_kubeconfig: yes
+        oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
+        name: k8s-dev
+        return_kubeconfig: yes
       register: my_cluster
-     
+
     # - ansible.builtin.debug:
     #    msg: "Cluster name is {{ my_cluster.data.name }}, ID is {{ my_cluster.data.id }}"
 
     # - ansible.builtin.debug:
     #    msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
 
-  
     # - name: Get Cluster information
     #   kubernetes.core.k8s_info:
     #    api_key: "{{do_token}}"
     #    kind: Namespace
     #    name: jenkins
     #   register: api_status
-      
+
     - name: Create web-server namespace
       k8s:
-       api_key: "{{ do_token }}"
-       definition:
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: "{{ deployment_name }}"
-
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ deployment_name }}"
 
     # - name: Create web-server deployment
     #   k8s:
@@ -135,7 +109,6 @@
     #               image: "{{ image }}"
     #               ports:
     #               - containerPort: 4000
-    
 
     # - name: Create web-server service
     #   k8s:
@@ -159,114 +132,31 @@
     #             port: 80
     #             targetPort: 4000
 
-    # - name: create web-server ingress
-
-
     - name: Create jenkins namespace
       k8s:
-       api_key: "{{ do_token }}"
-       definition:
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: "{{ jenkins_namespace }}"
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ jenkins_namespace }}"
 
+    - name: Create Jenkins account
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./jenkins-config/serviceAccount.yaml
 
+    - name: Create Jenkins Volume and Volume claim
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./jenkins-config/jenkins-storage.yaml
 
-    # - name: Create Jenkins deployment
-    #   k8s:
-    #    api_key: "{{ do_token }}"
-    #    definition:
-    #       apiVersion: v1
-    #       kind: Deployment
-    #       metadata:
-    #         name: "{{ jenkins_deployment_name }}"
-    #         namespace: "{{ jenkins_namespace }}"
-    #       spec:
-    #         replicas: 3
-    #         selector:
-    #           matchLabels:
-    #             app: jenkins
-    #         template:
-    #           metadata:
-    #             labels:
-    #               app: jenkins
-    #           spec:
-    #             containers:
-    #             - name: jenkins
-    #               image: "{{ jenkins_image_name }}"
-    #               ports:
-    #                - name: http
-    #                  containerPort: 8080
-    #                - name: jnlp
-    #                  containerPort: 50000
+    - name: Create Jenkins deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./jenkins-config/jenkins.yaml
 
-    # - name: Create Jenkins service
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     definition:
-    #       apiVersion: v1
-    #       kind: Service
-    #       metadata:
-    #         name: "{{ jenkins_deployment_name }}-service"
-    #         namespace: "{{ jenkins_namespace}}"
-    #       spec:
-    #         selector:
-    #           app: jenkins
-    #         type: NodePort
-    #         ports:
-    #           - name: http
-    #             port: 8080
-    #             targetPort: 8080
-    #           - name: jnlp
-    #             port: 50000
-    #             targetPort: 50000
-
-    # - name: create nginx deployment
-    #   k8s:
-    #    api_key: "{{ do_token }}"
-    #    definition:
-    #     apiVersion: apps/v1
-    #     kind: Deployment
-    #     metadata:
-    #      name: "nginx-deployment"
-    #      namespace: "default"
-    #     spec:
-    #      replicas: 2
-    #      selector:
-    #        matchLabels:
-    #         app: nginx-deployment
-    #      template:
-    #        metadata:
-    #          labels:
-    #           app: nginx-deployment
-    #        spec:
-    #           containers:
-    #           - name: nginx-deployment      
-    #             image: nginx
-    #             ports:
-    #             - containerPort: 8080
-
-    # - name: create nginx service 
-    #   k8s:
-    #    api_key: "{{ do_token }}"
-    #    definition:
-    #     apiVersion: v1
-    #     kind: Service
-    #     metadata:
-    #      name: "nginx-svc"
-    #      namespace: "default"
-    #      annotations:
-    #       kubernetes.digitalocean.com/load-balancer-id: "03d94bf0-23a6-4a75-bb41-fbad66f50d6b"
-    #       service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
-    #       service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
-    #     spec:
-    #        ports:
-    #        - port: 80
-    #          targetPort: 8080
-    #          protocol: TCP
-    #          name: http
-    #        selector:
-    #         app: nginx-deployment
-    #        type: LoadBalancer
- 
+    - name: Create Jenkins Service
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./jenkins-config/jenkins-service.yaml
