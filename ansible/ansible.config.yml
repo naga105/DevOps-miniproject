@@ -77,15 +77,15 @@
             name: "{{ jenkins_namespace }}"
 
     # Deploy Jenkins with 2 replicas
-    - name: Deploy Jenkins
-      k8s:
-        state: present
-        src: jenkins.yml
-        namespace: "{{ jenkins_namespace }}"
-      vars:
-        jenkins_name: "{{ jenkins_name }}"
-        jenkins_replicas: "{{ jenkins_replicas }}"
-        jenkins_namespace: "{{ jenkins_namespace }}"
+    # - name: Deploy Jenkins
+    #   k8s:
+    #     state: present
+    #     src: jenkins.yml
+    #     namespace: "{{ jenkins_namespace }}"
+    #   vars:
+    #     jenkins_name: "{{ jenkins_name }}"
+    #     jenkins_replicas: "{{ jenkins_replicas }}"
+    #     jenkins_namespace: "{{ jenkins_namespace }}"
 
     # Create namesapce for Web server
     - name: Create namespace for Web server
@@ -98,16 +98,16 @@
             name: "{{ web_namespace }}"
 
     # Deploy Web server
-    - name: Deploy Web server
-      k8s:
-        state: present
-        src: web.yml
-        namespace: "{{ web_namespace }}"
-      vars:
-        web_name: "{{ web_name }}"
-        web_namespace: "{{ web_namespace }}"
-        web_image: "{{ web_image }}"
-        web_port: "{{ web_port }}"
+    # - name: Deploy Web server
+    #   k8s:
+    #     state: present
+    #     src: web.yml
+    #     namespace: "{{ web_namespace }}"
+    #   vars:
+    #     web_name: "{{ web_name }}"
+    #     web_namespace: "{{ web_namespace }}"
+    #     web_image: "{{ web_image }}"
+    #     web_port: "{{ web_port }}"
 
     # Create namesapce for MySQL
     - name: Create namespace for MySQL

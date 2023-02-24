@@ -1,6 +1,6 @@
 ---
 - name: Create Kubernetes deployment and service for web-server , Jenkins  namespace
-  hosts: master
+  hosts: root
   connection: local
   become: true
   gather_facts: false
@@ -26,7 +26,7 @@
 
     # - name: ensure key exists at DigitalOcean
     #   digital_ocean: 
-    #    state: present
+    #    state: presenta
     #    command: ssh
     #    name: my_ssh_key
     #    ssh_pub_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
@@ -45,7 +45,7 @@
       digital_ocean:
        state: present
        command: ssh
-       name: "huy"
+       name: "ansible"
        api_token: "{{ do_token }}"
 
     # - name: Copy file with owner and permissions
@@ -73,7 +73,7 @@
     #       validate_certs: false
     - name: Gather information about all load balancers
       community.digitalocean.digital_ocean_load_balancer_info:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
+        oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
       register: my_loadbalancer
       
     - ansible.builtin.debug:
@@ -82,9 +82,9 @@
     # Connect to cluster using local kubeconfig file
     - name: Get information about an existing DigitalOcean Kubernetes cluster
       community.digitalocean.digital_ocean_kubernetes_info:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'DO_API_TOKEN') }}"
-        name: k8s-dev
-        return_kubeconfig: yes
+         oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
+         name: k8s-dev
+         return_kubeconfig: yes
       register: my_cluster
      
     # - ansible.builtin.debug:
@@ -111,52 +111,53 @@
           name: "{{ deployment_name }}"
 
 
-    - name: Create web-server deployment
-      k8s:
-        api_key: "{{ do_token }}"
-        definition:
-          apiVersion: v1
-          kind: Deployment
-          metadata:
-            name: "{{ deployment_name }}"
-            namespace: "{{ web_namespace }}"
-          spec:
-            replicas: 3
-            selector:
-              matchLabels:
-                app: "{{ deployment_name }}"
-            template:
-              metadata:
-                labels:
-                  app: "{{ deployment_name }}"
-              spec:
-                containers:
-                - name: app
-                  image: "{{ image }}"
-                  ports:
-                  - containerPort: 4000
+    # - name: Create web-server deployment
+    #   k8s:
+    #     api_key: "{{ do_token }}"
+    #     definition:
+    #       apiVersion: v1
+    #       kind: Deployment
+    #       metadata:
+    #         name: "{{ deployment_name }}"
+    #         namespace: "{{ web_namespace }}"
+    #       spec:
+    #         replicas: 3
+    #         selector:
+    #           matchLabels:
+    #             app: "{{ deployment_name }}"
+    #         template:
+    #           metadata:
+    #             labels:
+    #               app: "{{ deployment_name }}"
+    #           spec:
+    #             containers:
+    #             - name: app
+    #               image: "{{ image }}"
+    #               ports:
+    #               - containerPort: 4000
+    
 
-    - name: Create web-server service
-      k8s:
-        api_key: "{{ do_token }}"
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: "{{ deployment_name }}-service"
-            namespace: "{{ web_namespace }}"
-            annotations:
-             kubernetes.digitalocean.com/load-balancer-id: "03d94bf0-23a6-4a75-bb41-fbad66f50d6b"
-             service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
-             service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
-          spec:
-            selector:
-              app: "{{ deployment_name }}"
-            type: LoadBalancer
-            ports:
-              - name: http
-                port: 4000
-                targetPort: 4000
+    # - name: Create web-server service
+    #   k8s:
+    #     api_key: "{{ do_token }}"
+    #     definition:
+    #       apiVersion: v1
+    #       kind: Service
+    #       metadata:
+    #         name: "{{ deployment_name }}-service"
+    #         namespace: "{{ web_namespace }}"
+    #         annotations:
+    #          kubernetes.digitalocean.com/load-balancer-id: "03d94bf0-23a6-4a75-bb41-fbad66f50d6b"
+    #          service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
+    #          service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+    #       spec:
+    #         selector:
+    #           app: "{{ deployment_name }}"
+    #         type: LoadBalancer
+    #         ports:
+    #           - name: http
+    #             port: 80
+    #             targetPort: 4000
 
     # - name: create web-server ingress
 
@@ -172,54 +173,54 @@
 
 
 
-    - name: Create Jenkins deployment
-      k8s:
-       api_key: "{{ do_token }}"
-       definition:
-          apiVersion: v1
-          kind: Deployment
-          metadata:
-            name: "{{ jenkins_deployment_name }}"
-            namespace: "{{ jenkins_namespace }}"
-          spec:
-            replicas: 3
-            selector:
-              matchLabels:
-                app: jenkins
-            template:
-              metadata:
-                labels:
-                  app: jenkins
-              spec:
-                containers:
-                - name: jenkins
-                  image: "{{ jenkins_image_name }}"
-                  ports:
-                   - name: http
-                     containerPort: 8080
-                   - name: jnlp
-                     containerPort: 50000
+    # - name: Create Jenkins deployment
+    #   k8s:
+    #    api_key: "{{ do_token }}"
+    #    definition:
+    #       apiVersion: v1
+    #       kind: Deployment
+    #       metadata:
+    #         name: "{{ jenkins_deployment_name }}"
+    #         namespace: "{{ jenkins_namespace }}"
+    #       spec:
+    #         replicas: 3
+    #         selector:
+    #           matchLabels:
+    #             app: jenkins
+    #         template:
+    #           metadata:
+    #             labels:
+    #               app: jenkins
+    #           spec:
+    #             containers:
+    #             - name: jenkins
+    #               image: "{{ jenkins_image_name }}"
+    #               ports:
+    #                - name: http
+    #                  containerPort: 8080
+    #                - name: jnlp
+    #                  containerPort: 50000
 
-    - name: Create Jenkins service
-      k8s:
-        api_key: "{{ do_token }}"
-        definition:
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: "{{ jenkins_deployment_name }}-service"
-            namespace: "{{ jenkins_namespace}}"
-          spec:
-            selector:
-              app: jenkins
-            type: NodePort
-            ports:
-              - name: http
-                port: 8080
-                targetPort: 8080
-              - name: jnlp
-                port: 50000
-                targetPort: 50000
+    # - name: Create Jenkins service
+    #   k8s:
+    #     api_key: "{{ do_token }}"
+    #     definition:
+    #       apiVersion: v1
+    #       kind: Service
+    #       metadata:
+    #         name: "{{ jenkins_deployment_name }}-service"
+    #         namespace: "{{ jenkins_namespace}}"
+    #       spec:
+    #         selector:
+    #           app: jenkins
+    #         type: NodePort
+    #         ports:
+    #           - name: http
+    #             port: 8080
+    #             targetPort: 8080
+    #           - name: jnlp
+    #             port: 50000
+    #             targetPort: 50000
 
     # - name: create nginx deployment
     #   k8s:
