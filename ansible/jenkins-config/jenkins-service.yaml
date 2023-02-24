@@ -5,12 +5,12 @@ metadata:
   name: jenkins-service
   namespace: jenkins
   annotations:
-    prometheus.io/scrape: "true"
-    prometheus.io/path: /
-    prometheus.io/port: "8080"
-    kubernetes.digitalocean.com/load-balancer-id: "6327d14f-817c-43e5-a075-d5bbef6b7e12"
-    service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    kubernetes.digitalocean.com/load-balancer-id: "cb24d630-daaa-459e-a140-a1893b0fb132"
+    service.beta.kubernetes.io/do-loadbalancer-size-unit: "2"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+    service.beta.kubernetes.io/do-loadbalancer-tls-ports: "443"
+    service.beta.kubernetes.io/do-loadbalancer-tls-passthrough: "true"
 spec:
   selector:
     app: jenkins-server
@@ -19,6 +19,7 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
+
       # nodePort: 32000
 ---
 apiVersion: v1

@@ -28,7 +28,7 @@ spec:
       serviceAccountName: jenkins-admin
       containers:
         - name: jenkins
-          image: jenkins/jenkins:lts-jdk11
+          image: jenkins/jenkins:lts
           resources:
             limits:
               memory: "2Gi"
@@ -41,22 +41,6 @@ spec:
               containerPort: 8080
             - name: jnlpport
               containerPort: 50000
-          livenessProbe:
-            httpGet:
-              path: "/login"
-              port: 8080
-            initialDelaySeconds: 90
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-          readinessProbe:
-            httpGet:
-              path: "/login"
-              port: 8080
-            initialDelaySeconds: 60
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 3
           volumeMounts:
             - name: jenkins-vol
               mountPath: /var/jenkins_home
