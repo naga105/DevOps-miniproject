@@ -6,8 +6,8 @@ metadata:
   namespace: jenkins
   annotations:
     service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
-    kubernetes.digitalocean.com/load-balancer-id: "b315e7b7-42cc-4561-890f-644cfa531a1e"
-    service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
+    kubernetes.digitalocean.com/load-balancer-id: "acac23a2-7644-48f1-8998-7a85d46be73f"
+    service.beta.kubernetes.io/do-loadbalancer-size-unit: "3"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
   selector:
@@ -18,16 +18,18 @@ spec:
       port: 8080
       targetPort: 8080
       nodePort: 32000
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: jenkins-jnlp
-  namespace: jenkins
-spec:
-  type: ClusterIP
-  ports:
-    - port: 50000
+    - name: jnlp
+      port: 50000
       targetPort: 50000
-  selector:
-    app: jenkins-server
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: jenkins-jnlp
+#   namespace: jenkins
+# spec:
+#   type: LoadBalancer
+#   ports:
+
+#   selector:
+#     app: jenkins-server
