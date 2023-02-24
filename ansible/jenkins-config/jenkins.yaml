@@ -4,7 +4,7 @@ metadata:
   name: jenkins
   namespace: jenkins
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: jenkins-server
@@ -28,13 +28,13 @@ spec:
       serviceAccountName: jenkins-admin
       containers:
         - name: jenkins
-          image: jenkins/jenkins:lts
+          image: jenkins/jenkins:lts-jdk11
           resources:
             limits:
               memory: "2Gi"
               cpu: "1000m"
             requests:
-              memory: "500Mi"
+              memory: "800Mi"
               cpu: "500m"
           ports:
             - name: httpport

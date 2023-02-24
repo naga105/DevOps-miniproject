@@ -8,11 +8,28 @@ metadata:
     prometheus.io/scrape: "true"
     prometheus.io/path: /
     prometheus.io/port: "8080"
+    kubernetes.digitalocean.com/load-balancer-id: "6327d14f-817c-43e5-a075-d5bbef6b7e12"
+    service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
+    service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
   selector:
     app: jenkins-server
-  type: NodePort
+  type: LoadBalancer
   ports:
-    - port: 8080
+    - name: http
+      port: 8080
       targetPort: 8080
-      nodePort: 32000
+      # nodePort: 32000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-jnlp
+  namespace: jenkins
+spec:
+  type: ClusterIP
+  ports:
+    - port: 50000
+      targetPort: 50000
+  selector:
+    app: jenkins-server
