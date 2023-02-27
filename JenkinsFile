@@ -1,1 +1,18 @@
+pipeline {
+    agent {     
+      label 'ansible'
+    }
+    stages {
+        stage('deploy K8s') {
+          try {
+             steps {
+              sh 'ansible-playbook "./ansible/ansible-cluster.config.yaml" '
+             }
+            } 
+          catch(Exception e) {
+           echo 'Exception occurred: ' + e.toString()
+          }   
+        }
+    }
+}
 
