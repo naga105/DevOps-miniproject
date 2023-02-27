@@ -49,7 +49,7 @@
 
     - name: Gather information about all load balancers
       community.digitalocean.digital_ocean_load_balancer_info:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
+        oauth_token: "{{ do_token }}"
       register: my_loadbalancer
 
     - ansible.builtin.debug:
@@ -58,16 +58,16 @@
     # Connect to cluster using local kubeconfig file
     - name: Get information about an existing DigitalOcean Kubernetes cluster
       community.digitalocean.digital_ocean_kubernetes_info:
-        oauth_token: "{{ lookup('ansible.builtin.env', 'OAUTH_TOKEN') }}"
+        oauth_token: "{{ do_token }}"
         name: k8s-dev
         return_kubeconfig: yes
       register: my_cluster
 
-    # - ansible.builtin.debug:
-    #    msg: "Cluster name is {{ my_cluster.data.name }}, ID is {{ my_cluster.data.id }}"
+    - ansible.builtin.debug:
+        msg: "Cluster name is {{ my_cluster.data.name }}, ID is {{ my_cluster.data.id }}"
 
-    # - ansible.builtin.debug:
-    #    msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
+    - ansible.builtin.debug:
+        msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
 
     # - name: Get Cluster information
     #   kubernetes.core.k8s_info:
