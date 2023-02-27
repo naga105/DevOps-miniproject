@@ -4,15 +4,16 @@ pipeline {
     }
     stages {
         stage('deploy K8s') {
-          try {
-             steps {
+          steps {
+            script {
+	     try {
               sh 'ansible-playbook "./ansible/ansible-cluster.config.yaml" '
              }
-            } 
-          catch(Exception e) {
+            catch(Exception e) {
            echo 'Exception occurred: ' + e.toString()
           }   
         }
-    }
-}
-
+	}
+	}	
+	}
+	}
