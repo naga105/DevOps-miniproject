@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minipj-app
+  labels:
+    app: minipj-app
+  namespace: miniproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minipj-app
+  template:
+    metadata:
+      labels:
+        app: minipj-app
+      namespace: miniproject
+    spec:
+      containers:
+        - name: linksweb
+          image: registry.digitalocean.com/miniproject/appimg
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 400
+          env:
+            - name: DATABASE_HOST
+              value: db
+          envFrom:
+            - secretRef:
+                name: app-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: miniproject
+  annotations:
+  service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+  kubernetes.digitalocean.com/load-balancer-id: "acac23a2-7644-48f1-8998-7a85d46be73f"
+  service.beta.kubernetes.io/do-loadbalancer-size-unit: "3"
+  service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+spec:
+  type: LoadBalancer
+  selector:
+    app: minipj-app
+  ports:
+    - name: tcp
+      protocol: TCP
+      port: 80
+      targetPort: 4000

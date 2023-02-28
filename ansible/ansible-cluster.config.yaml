@@ -69,13 +69,6 @@
     - ansible.builtin.debug:
         msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
 
-    # - name: Get Cluster information
-    #   kubernetes.core.k8s_info:
-    #    api_key: "{{do_token}}"
-    #    kind: Namespace
-    #    name: jenkins
-    #   register: api_status
-
     - name: Create web-server namespace
       k8s:
         api_key: "{{ do_token }}"
@@ -85,53 +78,52 @@
           metadata:
             name: "{{ deployment_name }}"
 
-    # - name: Create web-server deployment
+    - name: Create app secret
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/app.secret.yaml
+
+    - name: Create mysql secret
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/mysql.secret.yaml
+    
+    - name: Create mysql configmap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/mysql.configmap.yaml
+
+    - name: Create mysql configmap-1
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/mysql.configmap-1.yaml
+    
+     - name: Create mysql pvc
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/mysql.pvc.yaml      
+
+    - name: Create web-server deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/app.deployment.yaml
+
+    # - name: Create web-server ingress
     #   k8s:
     #     api_key: "{{ do_token }}"
-    #     definition:
-    #       apiVersion: v1
-    #       kind: Deployment
-    #       metadata:
-    #         name: "{{ deployment_name }}"
-    #         namespace: "{{ web_namespace }}"
-    #       spec:
-    #         replicas: 3
-    #         selector:
-    #           matchLabels:
-    #             app: "{{ deployment_name }}"
-    #         template:
-    #           metadata:
-    #             labels:
-    #               app: "{{ deployment_name }}"
-    #           spec:
-    #             containers:
-    #             - name: app
-    #               image: "{{ image }}"
-    #               ports:
-    #               - containerPort: 4000
+    #     src: ./web-config/app.ingress.yaml  
 
-    # - name: Create web-server service
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     definition:
-    #       apiVersion: v1
-    #       kind: Service
-    #       metadata:
-    #         name: "{{ deployment_name }}-service"
-    #         namespace: "{{ web_namespace }}"
-    #         annotations:
-    #          kubernetes.digitalocean.com/load-balancer-id: "03d94bf0-23a6-4a75-bb41-fbad66f50d6b"
-    #          service.beta.kubernetes.io/do-loadbalancer-size-unit: "1"
-    #          service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
-    #       spec:
-    #         selector:
-    #           app: "{{ deployment_name }}"
-    #         type: LoadBalancer
-    #         ports:
-    #           - name: http
-    #             port: 80
-    #             targetPort: 4000
+    - name: Create mysql deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/mysql.deployment.yaml
+    
 
+    - name: Create web-server service
+      k8s:
+        api_key: "{{ do_token }}"
+
+    # Create Jenkins dev tools
     - name: Create jenkins namespace
       k8s:
         api_key: "{{ do_token }}"
