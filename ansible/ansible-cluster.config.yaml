@@ -87,7 +87,7 @@
       k8s:
         api_key: "{{ do_token }}"
         src: ./web-config/mysql.secret.yaml
-    
+
     - name: Create mysql configmap
       k8s:
         api_key: "{{ do_token }}"
@@ -97,11 +97,11 @@
       k8s:
         api_key: "{{ do_token }}"
         src: ./web-config/mysql.configmap-1.yaml
-    
-     - name: Create mysql pvc
+
+    - name: Create mysql pvc
       k8s:
         api_key: "{{ do_token }}"
-        src: ./web-config/mysql.pvc.yaml      
+        src: ./web-config/mysql.pvc.yaml
 
     - name: Create web-server deployment
       k8s:
@@ -111,17 +111,16 @@
     # - name: Create web-server ingress
     #   k8s:
     #     api_key: "{{ do_token }}"
-    #     src: ./web-config/app.ingress.yaml  
+    #     src: ./web-config/app.ingress.yaml
 
     - name: Create mysql deployment
       k8s:
         api_key: "{{ do_token }}"
         src: ./web-config/mysql.deployment.yaml
-    
 
-    - name: Create web-server service
-      k8s:
-        api_key: "{{ do_token }}"
+    # - name: Create web-server service
+    #   k8s:
+    #     api_key: "{{ do_token }}"
 
     # Create Jenkins dev tools
     - name: Create jenkins namespace

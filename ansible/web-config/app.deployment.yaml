@@ -21,7 +21,7 @@ spec:
           image: registry.digitalocean.com/miniproject/appimg
           imagePullPolicy: Always
           ports:
-            - containerPort: 400
+            - containerPort: 4000
           env:
             - name: DATABASE_HOST
               value: db
@@ -35,12 +35,11 @@ metadata:
   name: app
   namespace: miniproject
   annotations:
-  service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
-  kubernetes.digitalocean.com/load-balancer-id: "acac23a2-7644-48f1-8998-7a85d46be73f"
-  service.beta.kubernetes.io/do-loadbalancer-size-unit: "3"
-  service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
+    service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
+    service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
   type: LoadBalancer
+  ClusterIP: 10.245.109.42
   selector:
     app: minipj-app
   ports:

@@ -6,8 +6,6 @@ metadata:
   namespace: jenkins
   annotations:
     service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
-    kubernetes.digitalocean.com/load-balancer-id: "acac23a2-7644-48f1-8998-7a85d46be73f"
-    service.beta.kubernetes.io/do-loadbalancer-size-unit: "3"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
   selector:
@@ -17,7 +15,7 @@ spec:
     - name: http
       port: 8080
       targetPort: 8080
-      nodePort: 32000
+      # nodePort: 32000
     - name: jnlp
       port: 50000
       targetPort: 50000

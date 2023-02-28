@@ -72,6 +72,7 @@ metadata:
     app: mysql
   namespace: miniproject
 spec:
+  ClusterIP: 10.245.12.197
   selector:
     app: mysql
   ports:
