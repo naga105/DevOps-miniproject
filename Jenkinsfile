@@ -22,5 +22,13 @@ pipeline {
                     }
                 }
             }
+            stage('Trigger Ansible') {
+                agent {
+                    label 'docker-engine'
+                }
+                steps {
+                    build-job: 'deploy-pipeline'
+                }
+            }
         }
 }
