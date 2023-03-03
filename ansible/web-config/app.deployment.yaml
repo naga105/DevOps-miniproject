@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: linksweb
-          image: registry.digitalocean.com/miniproject/appimg
+          image: khanhtoan007/miniproject:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 4000
@@ -38,8 +38,7 @@ metadata:
     service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
-  type: LoadBalancer
-  ClusterIP: 10.245.109.42
+  type: NodePort
   selector:
     app: minipj-app
   ports:
@@ -47,3 +46,4 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 4000
+      nodePort: 31000

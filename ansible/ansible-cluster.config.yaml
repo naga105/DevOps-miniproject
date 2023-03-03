@@ -12,6 +12,7 @@
     jenkins_namespace: jenkins
     jenkins_deployment_name: jenkins
     do_token: dop_v1_84583e065650f3bb87c1d2ef8948ee108ca1e196d2bf46109cbfef948c1c047c
+    linode_token: 4efa207d025e355447958bd09617c88cd8f4ac5bd9041c818c68ce20394ffc44
   tasks:
     - name: Install required python libraries
       pip:
@@ -69,6 +70,52 @@
     - ansible.builtin.debug:
         msg: "Cluster kubeconfig is {{ my_cluster.data.kubeconfig }}"
 
+    # Create nginx ingress
+    - name: Create ingress namespace
+      k8s:
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: ingress-nginx
+
+    - name: Create admission service account
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/ServiceAccount.yaml
+
+    - name: Create Validating webhook
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/validating-webhook.yaml
+
+    - name: Deploy update webhook job
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/jobs.yaml
+
+    - name: Create Controller role
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/ingress-service-account.yaml
+
+    - name: Create ConfigMap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/configmap.yaml
+
+    - name: Create Ingress Controller Service
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/services.yaml
+
+    - name: Create Ingress Controller Deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./ingress-setup/deployment.yaml
+
+    # Create web application
     - name: Create web-server namespace
       k8s:
         api_key: "{{ do_token }}"
@@ -108,10 +155,10 @@
         api_key: "{{ do_token }}"
         src: ./web-config/app.deployment.yaml
 
-    # - name: Create web-server ingress
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./web-config/app.ingress.yaml
+    - name: Create web-server ingress
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./web-config/app.ingress.yaml
 
     - name: Create mysql deployment
       k8s:
@@ -151,3 +198,48 @@
       k8s:
         api_key: "{{ do_token }}"
         src: ./jenkins-config/jenkins-service.yaml
+
+    #Install prometheus + grafana
+    - name: Create monitoring namespace
+      k8s:
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "monitoring"
+
+    - name: Create Prometheus clusterRole
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/clusterRole.yaml
+
+    - name: Create Prometheus ConfigMap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/config-map.yaml
+
+    - name: Create Prometheus deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/prometheus-deployment.yaml
+
+    - name: Create Prometheus service
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/prometheus-service.yaml
+
+    - name: Create Grafana configmap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/grafana-datasource-config.yaml
+
+    - name: Create Grafana deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/deployment.yaml
+
+    - name: Create Grafana service
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/service.yaml

@@ -4,8 +4,9 @@ metadata:
   name: minipj-ingress
   namespace: miniproject
 spec:
+  ingressClassName: nginx
   rules:
-    - host: minipj.com
+    - host: toanporn.click
       http:
         paths:
           - path: /
@@ -14,4 +15,4 @@ spec:
               service:
                 name: app
                 port:
-                  name: http
+                  number: 80
