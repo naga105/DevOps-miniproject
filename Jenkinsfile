@@ -27,7 +27,7 @@ pipeline {
                     label 'docker-engine'
                 }
                 steps {
-                    build-job: 'deploy-pipeline'
+                    build job: 'deploy-pipeline'
                 }
             }
         }
