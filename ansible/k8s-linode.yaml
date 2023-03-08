@@ -1,0 +1,5 @@
+
+plugin: kubernetes.core.k8s
+connections:
+  - kubeconfig: /root/.kube/linode-k8s.yaml
+    context: "lke94355-ctx"

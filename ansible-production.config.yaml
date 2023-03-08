@@ -1,0 +1,32 @@
+---
+- name: Create Kubernetes deployment and service for web-server , Jenkins  namespace
+  hosts: root
+  connection: local
+  become: true
+  gather_facts: false
+  vars:
+    web_namespace: miniproject
+    deployment_name: miniproject
+    image: khanhtoan007/miniproject:v1
+    jenkins_image_name: jenkins/jenkins:lts
+    jenkins_namespace: jenkins
+    jenkins_deployment_name: jenkins
+    do_token: dop_v1_84583e065650f3bb87c1d2ef8948ee108ca1e196d2bf46109cbfef948c1c047c
+    linode_token: 4efa207d025e355447958bd09617c88cd8f4ac5bd9041c818c68ce20394ffc44
+    aws_token: fsicAa4N2VyMWdR9Tpt1/4+lMTnxHdOcv8SCNaRM
+  tasks:
+    - name: Install required python libraries
+      pip:
+        name: kubernetes
+
+
+    
+     # Create web application
+    - name: Create web-server namespace
+      k8s:
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ deployment_name }}"
