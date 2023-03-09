@@ -18,15 +18,15 @@
         name: kubernetes
 
     - name: apply kubeconfig
-      shell:
-        cmd: aws eks --region $(terraform output -raw region) update-kubeconfig --name $(terraform output -raw cluster_name)
+      ansible.builtin.shell:
+        cmd: "aws eks --region ap-southeast-1 update-kubeconfig --name EKS-production"
         chdir: ~/
 
       # # Create nginx ingress
     - name: Create ingress namespace
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         definition:
           apiVersion: v1
           kind: Namespace
@@ -36,50 +36,50 @@
     - name: Create admission service account
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/ServiceAccount.yaml
 
     - name: Create Validating webhook
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/validating-webhook.yaml
 
     - name: Deploy update webhook job
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/jobs.yaml
 
     - name: Create Controller role
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/ingress-service-account.yaml
 
     - name: Create ConfigMap
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/configmap.yaml
 
     - name: Create Ingress Controller Service
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/services.yaml
 
     - name: Create Ingress Controller Deployment
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./ingress-setup/deployment.yaml
 
     # Create web application
     - name: Create web-server namespace
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         definition:
           apiVersion: v1
           kind: Namespace
@@ -89,47 +89,47 @@
     - name: Create app secret
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/app.secret.yaml
 
     - name: Create mysql secret
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/mysql.secret.yaml
 
     - name: Create mysql configmap
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/mysql.configmap.yaml
 
     - name: Create mysql configmap-1
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/mysql.configmap-1.yaml
 
     - name: Create mysql pvc
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/mysql.pvc.yaml
 
     - name: Create web-server deployment
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/app.deployment.yaml
 
     - name: Create web-server ingress
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/app.ingress.yaml
 
     - name: Create mysql deployment
       k8s:
         api_key: "{{ aws_token }}"
-        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production-0T4z9yws
         src: ./web-config/mysql.deployment.yaml
