@@ -19,7 +19,7 @@
 
     - name: apply kubeconfig
       ansible.builtin.shell:
-        cmd: "aws eks --region ap-southeast-1 update-kubeconfig --name EKS-production"
+        cmd: "aws eks --region ap-southeast-1 update-kubeconfig --name EKS-production-0T4z9yws"
         chdir: ~/
 
       # # Create nginx ingress
