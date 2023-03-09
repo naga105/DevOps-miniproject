@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MPL-2.0
 
 provider "aws" {
-  region = var.region
+  region                  = var.region
   shared_credentials_file = "~/.aws/credentials"
-  profile = "default"
+  profile                 = "default"
 }
 
 data "aws_availability_zones" "available" {
@@ -12,7 +12,7 @@ data "aws_availability_zones" "available" {
 }
 
 locals {
-  cluster_name = "EKS-production-${random_string.suffix.result}"
+  cluster_name = "EKS-production"
 }
 
 resource "random_string" "suffix" {
@@ -20,17 +20,18 @@ resource "random_string" "suffix" {
   special = false
 }
 
+
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
   version = "3.19.0"
 
   name = "EKS-production-vpc"
 
-  cidr = "182.168.0.0/16"
-  azs  = slice(data.aws_availability_zones.available.names, 0, 3)
 
-  public_subnets = ["182.168.1.0/24", "182.168.2.0/24"]
 
+  cidr           = "172.168.0.0/16"
+  azs            = slice(data.aws_availability_zones.available.names, 0, 3)
+  public_subnets = ["172.168.1.0/24", "172.168.2.0/24"]
 
   enable_dns_hostnames = true
 
@@ -49,12 +50,23 @@ module "eks" {
   cluster_version = "1.24"
 
   vpc_id                         = module.vpc.vpc_id
-  subnet_ids                     = module.vpc.private_subnets
+  subnet_ids                     = module.vpc.public_subnets
   cluster_endpoint_public_access = true
 
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
 
+  }
+  cluster_addons = {
+    coredns = {
+      most_recent = true
+    }
+    kube-proxy = {
+      most_recent = true
+    }
+    vpc-cni = {
+      most_recent = true
+    }
   }
 
   eks_managed_node_groups = {
