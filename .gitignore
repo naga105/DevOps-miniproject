@@ -1,4 +1,5 @@
-/terraform
 /aws
 .vscode
 /ansible/.vscode
+/terraform-do
+/terraform-linode
