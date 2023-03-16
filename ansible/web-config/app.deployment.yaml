@@ -38,7 +38,6 @@ metadata:
     service.beta.kubernetes.io/do-loadbalancer-protocol: "http"
     service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records: "false"
 spec:
-  type: NodePort
   selector:
     app: minipj-app
   ports:
@@ -46,4 +45,3 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 4000
-      nodePort: 31000

@@ -20,34 +20,13 @@ resource "random_string" "suffix" {
   special = false
 }
 
-
-module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
-  version = "3.19.0"
-
-  name = "EKS-production-vpc"
-
-
-
-  cidr           = "172.168.0.0/16"
-  azs            = slice(data.aws_availability_zones.available.names, 0, 3)
-  public_subnets = ["172.168.1.0/24", "172.168.2.0/24"]
-
-  enable_dns_hostnames = true
-
-  public_subnet_tags = {
-    "kubernetes.io/cluster/${local.cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                      = 1
-  }
-
-}
-
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "19.5.1"
 
   cluster_name    = local.cluster_name
   cluster_version = "1.24"
+  enable_irsa     = true
 
   vpc_id                         = module.vpc.vpc_id
   subnet_ids                     = module.vpc.public_subnets
@@ -80,7 +59,39 @@ module "eks" {
       desired_size = 2
     }
   }
+
+  manage_aws_auth_configmap = true
+  aws_auth_roles = [
+    {
+      rolearn  = module.eks_admins_iam_role.iam_role_arn
+      username = module.eks_admins_iam_role.iam_role_name
+      groups   = ["system:masters"]
+    },
+  ]
+
 }
+
+# data "aws_eks_cluster" "default" {
+#   name = module.eks.cluster_id
+# }
+
+# data "aws_eks_cluster_auth" "default" {
+#   name = module.eks.cluster_id
+# }
+
+provider "kubernetes" {
+  host                   = module.eks.cluster_endpoint
+  cluster_ca_certificate = base64decode(module.eks.cluster_certificate_authority_data)
+  # token                  = data.aws_eks_cluster_auth.default.tokens
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", module.eks.cluster_name]
+    command     = "aws"
+  }
+}
+
+
+
 
 
 # https://aws.amazon.com/blogs/containers/amazon-ebs-csi-driver-is-now-generally-available-in-amazon-eks-add-ons/ 

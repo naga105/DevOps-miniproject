@@ -156,6 +156,12 @@
         context: do-sgp1-k8s-dev
         src: ./web-config/mysql.pvc.yaml
 
+    - name: Create mysql deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        context: do-sgp1-k8s-dev
+        src: ./web-config/mysql.deployment.yaml
+
     - name: Create web-server deployment
       k8s:
         api_key: "{{ do_token }}"
@@ -166,12 +172,6 @@
     #   k8s:
     #     api_key: "{{ do_token }}"
     #     src: ./web-config/app.ingress.yaml
-
-    - name: Create mysql deployment
-      k8s:
-        api_key: "{{ do_token }}"
-        context: do-sgp1-k8s-dev
-        src: ./web-config/mysql.deployment.yaml
 
     # Create Jenkins dev tools
     - name: Create jenkins namespace
