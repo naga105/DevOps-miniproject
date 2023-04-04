@@ -209,49 +209,51 @@
         src: ./jenkins-config/jenkins-service.yaml
 
     #Install prometheus + grafana
-    # - name: Create monitoring namespace
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     definition:
-    #       apiVersion: v1
-    #       kind: Namespace
-    #       metadata:
-    #         name: "monitoring"
+    - name: Create monitoring namespace
+      k8s:
+        api_key: "{{ do_token }}"
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "monitoring"
 
-    # - name: Create Prometheus clusterRole
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-prometheus/clusterRole.yaml
+    - name: Create Prometheus clusterRole
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/clusterRole.yaml
 
-    # - name: Create Prometheus ConfigMap
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-prometheus/prometheus-service.yaml
+    - name: Create Prometheus ConfigMap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/prometheus-service.yaml
 
-    # - name: Create Grafana configmap
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-grafana/grafana-datasource-config.yaml
+    - name: Create Grafana configmap
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/grafana-datasource-config.yaml
 
-    # - name: Create Grafana deployment
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-grafana/deployment.yaml
+    - name: Create Grafana deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/deployment.yaml
 
-    # - name: Create Grafana service
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-grafana/service.yaml
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-prometheus/config-map.yaml
+    - name: Create Grafana service
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-grafana/service.yaml
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/config-map.yaml
 
-    # - name: Create Prometheus deployment
-    #   k8s:
-    #     api_key: "{{ do_token }}"
-    #     src: ./kubernetes-prometheus/prometheus-deployment.yaml
+    - name: Create Prometheus deployment
+      k8s:
+        api_key: "{{ do_token }}"
+        src: ./kubernetes-prometheus/prometheus-deployment.yaml
 
-    # - name: Create Prometheus service
-    #   k8s:
+    - name: Create Prometheus service
+      k8s:
+       api_key: "{{ do_token }}"
+       src: ./kubernetes-prometheus/prometheus-service.yaml
     #
     # Advance setup
     # - name: Deploy latest version of Grafana chart inside monitoring namespace with values

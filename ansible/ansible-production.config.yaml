@@ -122,6 +122,11 @@
         context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
         src: ./web-config/mysql.deployment.yaml
 
+    - name: Wait 20 seconds until web-deployment online
+      ansible.builtin.wait_for:
+        timeout: 20
+      delegate_to: localhost
+
     - name: Create web-server deployment
       k8s:
         api_key: "{{ aws_token }}"
@@ -179,27 +184,36 @@
             name: monitoring
 
     #THIS SECTION SHOULD BE APPLY SERVER-SIDE BY HAND
-    # - name: Apply prometheus-server serverside set up manifest to the cluster.
-    #   kubernetes.core.k8s:
-    #     api_key: "{{ aws_token }}"
-    #     context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
-    #     state: present
-    #     namespace: monitoring
-    #     definition: "{{ lookup('template', '{{ item }}') }}"
-    #     apply: yes
-    #     server_side_apply:
-    #       field_manager: ansible
-    #   with_fileglob:
-    #     - "./kube-prometheus/manifests/setup/*.yaml"
-    #   ignore_unreachable: true
+    - name: Apply prometheus-server serverside set up manifest to the cluster.
+      kubernetes.core.k8s:
+        api_key: "{{ aws_token }}"
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        state: present
+        namespace: monitoring
+        definition: "{{ lookup('template', '{{ item }}') }}"
+        apply: yes
+        server_side_apply:
+          field_manager: ansible
+      with_fileglob:
+        - "./kube-prometheus/manifests/setup/*.yaml"
+      ignore_unreachable: true
 
-    # - name: Apply prometheus-server manifest.
-    #   kubernetes.core.k8s:
-    #     api_key: "{{ aws_token }}"
-    #     context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
-    #     state: present
-    #     namespace: monitoring
-    #     definition: "{{ lookup('template', '{{ item }}') }}"
-    #     apply: yes
-    #   with_fileglob:
-    #     - "./kube-prometheus/manifests/*.yaml"
+    - name: Apply prometheus-server manifest
+      kubernetes.core.k8s:
+        api_key: "{{ aws_token }}"
+        context: arn:aws:eks:ap-southeast-1:195996744877:cluster/EKS-production
+        state: present
+        namespace: monitoring
+        definition: "{{ lookup('template', '{{ item }}') }}"
+        apply: yes
+      with_fileglob:
+        - "./kube-prometheus/manifests/alertmanager-*.yaml"
+        - "./kube-prometheus/manifests/blackboxExporter-*.yaml"
+        - "./kube-prometheus/manifests/grafana-*.yaml"
+        - "./kube-prometheus/manifests/kubePrometheus-*.yaml"
+        - "./kube-prometheus/manifests/kubernetesControlPlane-*.yaml"
+        - "./kube-prometheus/manifests/kubeStateMetrics-*.yaml"
+        - "./kube-prometheus/manifests/nodeExporter-*.yaml"
+        - "./kube-prometheus/manifests/prometheus-*.yaml"
+        - "./kube-prometheus/manifests/prometheusAdapter-*.yaml"
+        - "./kube-prometheus/manifests/prometheusOperator-*.yaml"
